@@ -1,18 +1,65 @@
 ﻿using System;
 
-namespace LabWork
-{
-    // Даний проект є шаблоном для виконання лабораторних робіт
-    // з курсу "Об'єктно-орієнтоване програмування та патерни проектування"
-    // Необхідно змінювати і дописувати код лише в цьому проекті
-    // Відео-інструкції щодо роботи з github можна переглянути 
-    // за посиланням https://www.youtube.com/@ViktorZhukovskyy/videos 
+    
+    class SmartHome
+    {
+        public void TurnOnLight()
+        {
+            Console.WriteLine("Світло увімкнено");
+        }
+
+        public void TurnOffLight()
+        {
+            Console.WriteLine("Світло вимкнено");
+        }
+    }
+
+    
+    interface ISmartHomeController
+    {
+        void ExecuteCommand(string command);
+    }
+
+    
+    class SmsAdapter : ISmartHomeController
+    {
+        private SmartHome smartHome;
+
+        public SmsAdapter(SmartHome smartHome)
+        {
+            this.smartHome = smartHome;
+        }
+
+        public void ExecuteCommand(string command)
+        {
+            if (command == "LIGHT_ON")
+            {
+                smartHome.TurnOnLight();
+            }
+            else if (command == "LIGHT_OFF")
+            {
+                smartHome.TurnOffLight();
+            }
+            else
+            {
+                Console.WriteLine("Невідома SMS-команда");
+            }
+        }
+    }
+
+   
     class Program
     {
         static void Main(string[] args)
         {
-            
-            Console.WriteLine("Hello World!");
+            SmartHome home = new SmartHome();
+            ISmartHomeController controller = new SmsAdapter(home);
+
+        
+            controller.ExecuteCommand("LIGHT_ON");
+            controller.ExecuteCommand("LIGHT_OFF");
+
+            Console.ReadLine();
         }
     }
-}
+
