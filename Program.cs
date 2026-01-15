@@ -1,65 +1,121 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-    
-    class SmartHome
+class Document
+{
+    private List<string> parts = new List<string>();
+    private List<string> footnotes = new List<string>();
+
+    public void AddHeading(string text)
     {
-        public void TurnOnLight()
-        {
-            Console.WriteLine("Світло увімкнено");
-        }
-
-        public void TurnOffLight()
-        {
-            Console.WriteLine("Світло вимкнено");
-        }
+        parts.Add("=== " + text + " ===");
     }
 
-    
-    interface ISmartHomeController
+    public void AddSection(string text)
     {
-        void ExecuteCommand(string command);
+        parts.Add(text);
     }
 
-    
-    class SmsAdapter : ISmartHomeController
+    public void AddFootnote(string text)
     {
-        private SmartHome smartHome;
-
-        public SmsAdapter(SmartHome smartHome)
-        {
-            this.smartHome = smartHome;
-        }
-
-        public void ExecuteCommand(string command)
-        {
-            if (command == "LIGHT_ON")
-            {
-                smartHome.TurnOnLight();
-            }
-            else if (command == "LIGHT_OFF")
-            {
-                smartHome.TurnOffLight();
-            }
-            else
-            {
-                Console.WriteLine("Невідома SMS-команда");
-            }
-        }
+        footnotes.Add(text);
     }
 
-   
-    class Program
+    public string GetContent()
     {
-        static void Main(string[] args)
+        StringBuilder sb = new StringBuilder();
+
+        foreach (string part in parts)
+            sb.AppendLine(part);
+
+        if (footnotes.Count > 0)
         {
-            SmartHome home = new SmartHome();
-            ISmartHomeController controller = new SmsAdapter(home);
-
-        
-            controller.ExecuteCommand("LIGHT_ON");
-            controller.ExecuteCommand("LIGHT_OFF");
-
-            Console.ReadLine();
+            sb.AppendLine();
+            sb.AppendLine("Виноски:");
+            foreach (string note in footnotes)
+                sb.AppendLine("- " + note);
         }
+
+        return sb.ToString();
+    }
+}
+
+interface IDocumentBuilder
+{
+    void AddHeading(string text);
+    void AddSection(string text);
+    void AddFootnote(string text);
+    Document GetDocument();
+    void Reset();
+}
+
+class HtmlDocumentBuilder : IDocumentBuilder
+{
+    private Document document = new Document();
+
+    public void Reset()
+    {
+        document = new Document();
     }
 
+    public void AddHeading(string text)
+    {
+        document.AddHeading(text);
+    }
+
+    public void AddSection(string text)
+    {
+        document.AddSection(text);
+    }
+
+    public void AddFootnote(string text)
+    {
+        document.AddFootnote(text);
+    }
+
+    public Document GetDocument()
+    {
+        return document;
+    }
+}
+
+class DocumentDirector
+{
+    public void ConstructTechnicalReport(IDocumentBuilder builder)
+    {
+        builder.Reset();
+
+        builder.AddHeading("Технічний звіт");
+        builder.AddSection("Це вступна секція технічного документа.");
+        builder.AddFootnote("Дані взяті з відкритих джерел.");
+        builder.AddSection("Опис основної архітектури системи.");
+        builder.AddHeading("Висновок");
+        builder.AddSection("Система працює стабільно.");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        IDocumentBuilder builder = new HtmlDocumentBuilder();
+        DocumentDirector director = new DocumentDirector();
+
+        Console.WriteLine("Generating Document...\n");
+
+        director.ConstructTechnicalReport(builder);
+        Document doc = builder.GetDocument();
+        Console.WriteLine(doc.GetContent());
+
+        Console.WriteLine("\nGenerating Custom Document...\n");
+
+        builder.Reset();
+        builder.AddHeading("Мій власний документ");
+        builder.AddSection("Довільний текст секції.");
+        builder.AddFootnote("Примітка автора.");
+
+        Document customDoc = builder.GetDocument();
+        Console.WriteLine(customDoc.GetContent());
+    }
+}
